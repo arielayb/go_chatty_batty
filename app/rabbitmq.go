@@ -18,10 +18,8 @@ type AmqpConnection interface {
 	Close() error
 }
 
-type AmqpDial func(url string) (AmqpConnection, error)
-
-type AmqpConnectionWrapper struct {
-	conn *amqp.Connection
+type AmqpDial interface {
+	Dial(url string) (*amqp.Connection, error)
 }
 
 func failOnError(err error, msg string) {
@@ -30,8 +28,8 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func RmqConnect(rmqpurl string) (AmqpConnection, error) {
-	conn, err := amqp.Dial(rmqpurl)
+func RmqConnect(amqpDial AmqpDial, rmqpurl string) (*amqp.Connection, error) {
+	conn, err := AmqpDial.Dial(amqpDial, rmqpurl)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -70,13 +68,5 @@ func RmqConnect(rmqpurl string) (AmqpConnection, error) {
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")*/
-	return AmqpConnectionWrapper{conn}, nil
-}
-
-func (w AmqpConnectionWrapper) Channel() (AmqpChannel, error) {
-	return w.conn.Channel()
-}
-
-func (w AmqpConnectionWrapper) Close() error {
-	return w.conn.Close()
+	return conn, nil
 }
