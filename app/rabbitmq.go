@@ -28,7 +28,7 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func RmqConnect(amqpDial AmqpDial, rmqpurl string) (*amqp.Connection, error) {
+func rmqConnect(amqpDial AmqpDial, rmqpurl string) (*amqp.Connection, error) {
 	conn, err := AmqpDial.Dial(amqpDial, rmqpurl)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
