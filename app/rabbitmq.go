@@ -1,8 +1,10 @@
 package app
 
 import (
-	amqp "github.com/rabbitmq/amqp091-go"
+	"fmt"
 	"log"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type AmqpChannel interface {
@@ -14,11 +16,11 @@ type AmqpChannel interface {
 }
 
 type AmqpConnection interface {
-	Channel() (AmqpChannel, error)
+	Channel() (*amqp.Connection, error)
 	Close() error
 }
 
-type AmqpDial interface {
+type AmqpDialer interface {
 	Dial(url string) (*amqp.Connection, error)
 }
 
@@ -28,10 +30,14 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func rmqConnect(amqpDial AmqpDial, rmqpurl string) (*amqp.Connection, error) {
-	conn, err := AmqpDial.Dial(amqpDial, rmqpurl)
+func rmqConnect(amqpDial AmqpDialer, rmqpurl string) error {
+	conn, err := AmqpDialer.Dial(amqpDial, rmqpurl)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
+
+	if err != nil {
+		fmt.Errorf("Error: %v", err.Error())
+	}
 
 	/*ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
@@ -68,5 +74,5 @@ func rmqConnect(amqpDial AmqpDial, rmqpurl string) (*amqp.Connection, error) {
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")*/
-	return conn, nil
+	return nil
 }

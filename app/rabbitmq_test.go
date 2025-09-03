@@ -1,24 +1,24 @@
 package app
 
 import (
-	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 type mockRmqClient struct {
+	createRmqError error
 }
 
-func (m mockRmqClient) Dial(amqpDial AmqpDial, url string) (*amqp.Connection, error) {
-	return &amqp.Connection{}, nil
+func (m mockRmqClient) Dial(url string) (*amqp.Connection, error) {
+	return &amqp.Connection{}, m.createRmqError
 }
 
-func TestingRMQConn(t *testing.T) {
+func TestRmqConnect(t *testing.T) {
 	mockRmqClient := mockRmqClient{}
-	conn, err := rmqConnect("ampq://testme")
+	err := rmqConnect(mockRmqClient, "ampq://testme")
 	if err != nil {
 		t.Errorf("Error: %v", err.Error())
 	}
-	assert.NotNil(t, conn, "the connection shouldn't be null")
+	assert.NotNil(t, mockRmqClient, "the connection shouldn't be null")
 }
