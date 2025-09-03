@@ -16,9 +16,9 @@ func (m mockRmqClient) Dial(url string) (*amqp.Connection, error) {
 
 func TestRmqConnect(t *testing.T) {
 	mockRmqClient := mockRmqClient{}
-	err := rmqConnect(mockRmqClient, "ampq://testme")
+	conn, err := RmqConnect(mockRmqClient, "testme")
 	if err != nil {
 		t.Errorf("Error: %v", err.Error())
 	}
-	assert.NotNil(t, mockRmqClient, "the connection shouldn't be null")
+	assert.NotNil(t, conn, "the connection shouldn't be null")
 }

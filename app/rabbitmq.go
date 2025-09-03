@@ -30,10 +30,10 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func rmqConnect(amqpDial AmqpDialer, rmqpurl string) error {
+func RmqConnect(amqpDial AmqpDialer, rmqpurl string) (*amqp.Connection, error) {
 	conn, err := AmqpDialer.Dial(amqpDial, rmqpurl)
 	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
+	//defer conn.Close()
 
 	if err != nil {
 		fmt.Errorf("Error: %v", err.Error())
@@ -74,5 +74,5 @@ func rmqConnect(amqpDial AmqpDialer, rmqpurl string) error {
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")*/
-	return nil
+	return conn, nil
 }
