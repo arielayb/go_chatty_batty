@@ -7,11 +7,23 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type AmqpChannel interface {
-	ExchangeDeclare(name, kind string, durable, autoDelete, internal, noWait bool, args amqp.Table) error
-	QueueDeclare(name string, durable, autoDelete, exclusive, noWait bool, args amqp.Table) (amqp.Queue, error)
+/*type AmqpChannel interface {
+	ExchangeDeclare(
+		name, kind string,
+		durable, autoDelete, internal, noWait bool,
+		args amqp.Table,
+	) error
+	QueueDeclare(
+		name string,
+		durable, autoDelete, exclusive, noWait bool,
+		args amqp.Table,
+	) (amqp.Queue, error)
 	QueueBind(name, key, exchange string, noWait bool, args amqp.Table) error
-	Consume(queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args amqp.Table) (<-chan amqp.Delivery, error)
+	Consume(
+		queue, consumer string,
+		autoAck, exclusive, noLocal, noWait bool,
+		args amqp.Table,
+	) (<-chan amqp.Delivery, error)
 	Publish(exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error
 }
 
@@ -22,17 +34,26 @@ type AmqpConnection interface {
 
 type AmqpDialer interface {
 	Dial(url string) (*amqp.Connection, error)
+}*/
+
+type RmqMsg struct {
+	dialer  AmqpDialer
+	RmqConn *amqp.Connection
 }
 
-func failOnError(err error, msg string) {
+func NewRmqClient(dialer AmqpDialer) *RmqMsg {
+	return &RmqMsg{dialer: dialer}
+}
+
+func (r *RmqMsg) failOnError(err error, msg string) {
 	if err != nil {
 		log.Panicf("%s: %s", msg, err)
 	}
 }
 
-func RmqConnect(amqpDial AmqpDialer, rmqpurl string) (*amqp.Connection, error) {
-	conn, err := AmqpDialer.Dial(amqpDial, rmqpurl)
-	failOnError(err, "Failed to connect to RabbitMQ")
+func (r *RmqMsg) RmqConnect(rmqpurl string) error {
+	conn, err := r.dialer.Dial(rmqpurl)
+	r.failOnError(err, "Failed to connect to RabbitMQ")
 	//defer conn.Close()
 
 	if err != nil {
@@ -74,5 +95,7 @@ func RmqConnect(amqpDial AmqpDialer, rmqpurl string) (*amqp.Connection, error) {
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")*/
-	return conn, nil
+	r.RmqConn = conn
+
+	return nil
 }

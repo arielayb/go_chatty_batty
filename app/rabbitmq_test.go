@@ -6,19 +6,24 @@ import (
 	"testing"
 )
 
-type mockRmqClient struct {
-	createRmqError error
+type mockAmqDialer struct {
+	RmqConn     *amqp.Connection
+	ReturnError error
 }
 
-func (m mockRmqClient) Dial(url string) (*amqp.Connection, error) {
-	return &amqp.Connection{}, m.createRmqError
+func (m *mockAmqDialer) Dial(url string) (*amqp.Connection, error) {
+	return m.RmqConn, m.ReturnError
 }
 
 func TestRmqConnect(t *testing.T) {
-	mockRmqClient := mockRmqClient{}
-	conn, err := RmqConnect(mockRmqClient, "testme")
-	if err != nil {
+	mockAmqDialer := &mockAmqDialer{
+		RmqConn:     &amqp.Connection{},
+		ReturnError: nil,
+	}
+	rmqClient := NewRmqClient(mockAmqDialer)
+	if err := rmqClient.RmqConnect("testme"); err != nil {
 		t.Errorf("Error: %v", err.Error())
 	}
-	assert.NotNil(t, conn, "the connection shouldn't be null")
+
+	assert.NotNil(t, rmqClient, "the connection shouldn't be null")
 }
