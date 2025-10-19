@@ -36,7 +36,7 @@ func (r *RmqPubMsg) RmqPublish(rmqpurl string) {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"logs",   // name
+		"test",   // name
 		"fanout", // type
 		true,     // durable
 		false,    // auto-deleted
@@ -48,21 +48,19 @@ func (r *RmqPubMsg) RmqPublish(rmqpurl string) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	go func() {
-		for {
-			body := "escape!"
-			err = ch.PublishWithContext(ctx,
-				"logs", // exchange
-				"",     // routing key
-				false,  // mandatory
-				false,  // immediate
-				amqp.Publishing{
-					ContentType: "text/plain",
-					Body:        []byte(body),
-				})
-			r.failOnPublishError(err, "Failed to publish a message")
+	for {
+		body := "escape!"
+		err = ch.PublishWithContext(ctx,
+			"test", // exchange
+			"",     // routing key
+			false,  // mandatory
+			false,  // immediate
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        []byte(body),
+			})
+		r.failOnPublishError(err, "Failed to publish a message")
 
-			log.Printf(" [x] Sent %s", body)
-		}
-	}()
+		log.Printf(" [x] Sent %s", body)
+	}
 }
