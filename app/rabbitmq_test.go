@@ -1,9 +1,10 @@
 package app
 
 import (
+	"testing"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type mockAmqDialer struct {
@@ -21,9 +22,7 @@ func TestRmqConnect(t *testing.T) {
 		ReturnError: nil,
 	}
 	rmqClient := NewRmqClient(mockAmqDialer)
-	if err := rmqClient.RmqConnect("testme"); err != nil {
-		t.Errorf("Error: %v", err.Error())
-	}
+	rmqClient.RmqConnect("testme")
 
 	assert.NotNil(t, rmqClient, "the connection shouldn't be null")
 }

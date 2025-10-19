@@ -32,11 +32,11 @@ func main() {
 	}
 
 	realDialer := &app.RealRmqDialer{}
-	client := app.NewRmqClient(realDialer)
-	if err := client.RmqConnect("amqp://guest:guest@localhost:5672/"); err != nil {
-		log.Fatalf("The connection failed: %v", err)
-	}
-	defer client.RmqConn.Close()
+	subsriber := app.NewRmqClient(realDialer)
+	publisher := app.NewRmqPublisher(realDialer)
+	go subsriber.RmqConnect("amqp://guest:guest@localhost:5672/")
+	go publisher.RmqPublish("amqp://guest:guest@localhost:5672/")
+	defer subsriber.RmqConn.Close()
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

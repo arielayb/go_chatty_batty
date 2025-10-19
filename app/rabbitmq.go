@@ -7,35 +7,6 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-/*type AmqpChannel interface {
-	ExchangeDeclare(
-		name, kind string,
-		durable, autoDelete, internal, noWait bool,
-		args amqp.Table,
-	) error
-	QueueDeclare(
-		name string,
-		durable, autoDelete, exclusive, noWait bool,
-		args amqp.Table,
-	) (amqp.Queue, error)
-	QueueBind(name, key, exchange string, noWait bool, args amqp.Table) error
-	Consume(
-		queue, consumer string,
-		autoAck, exclusive, noLocal, noWait bool,
-		args amqp.Table,
-	) (<-chan amqp.Delivery, error)
-	Publish(exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error
-}
-
-type AmqpConnection interface {
-	Channel() (*amqp.Connection, error)
-	Close() error
-}
-
-type AmqpDialer interface {
-	Dial(url string) (*amqp.Connection, error)
-}*/
-
 type RmqMsg struct {
 	dialer  AmqpDialer
 	RmqConn *amqp.Connection
@@ -51,7 +22,7 @@ func (r *RmqMsg) failOnError(err error, msg string) {
 	}
 }
 
-func (r *RmqMsg) RmqConnect(rmqpurl string) error {
+func (r *RmqMsg) RmqConnect(rmqpurl string) {
 	conn, err := r.dialer.Dial(rmqpurl)
 	r.failOnError(err, "Failed to connect to RabbitMQ")
 	//defer conn.Close()
@@ -60,8 +31,8 @@ func (r *RmqMsg) RmqConnect(rmqpurl string) error {
 		fmt.Errorf("Error: %v", err.Error())
 	}
 
-	/*ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
+	ch, err := conn.Channel()
+	r.failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
@@ -72,7 +43,7 @@ func (r *RmqMsg) RmqConnect(rmqpurl string) error {
 		false,  // no-wait
 		nil,    // arguments
 	)
-	failOnError(err, "Failed to declare a queue")
+	r.failOnError(err, "Failed to declare a queue")
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
@@ -84,9 +55,9 @@ func (r *RmqMsg) RmqConnect(rmqpurl string) error {
 		nil,    // args
 	)
 
-	failOnError(err, "Failed to register a consumer")
+	r.failOnError(err, "Failed to register a consumer")
 
-	//	var forever chan struct{}
+	var forever chan struct{}
 
 	go func() {
 		for d := range msgs {
@@ -94,8 +65,6 @@ func (r *RmqMsg) RmqConnect(rmqpurl string) error {
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")*/
-	r.RmqConn = conn
-
-	return nil
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	<-forever
 }
