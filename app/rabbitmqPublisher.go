@@ -24,8 +24,10 @@ func (r *RmqPubMsg) failOnPublishError(err error, msg string) {
 }
 
 func (r *RmqPubMsg) RmqPublish(rmqpurl string) {
-	// const timedMessages = 43200
-	// var processedMsgs int
+	// simulate a 12 hour message stream
+	const timedMessages = 43200
+	var processedMsgs int
+	const messageRate = 5
 
 	conn, err := r.dialer.Dial(rmqpurl)
 	r.failOnPublishError(err, "Failed to connect to RabbitMQ")
@@ -35,32 +37,39 @@ func (r *RmqPubMsg) RmqPublish(rmqpurl string) {
 	r.failOnPublishError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	err = ch.ExchangeDeclare(
-		"test",   // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
+	q, err := ch.QueueDeclare(
+		"test", // name
+		true,   // durable
+		true,   // delete when unused
+		false,  // exclusive
+		false,  // no-wait
+		nil,    // arguments
 	)
 	r.failOnPublishError(err, "Failed to declare an exchange")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	for {
-		body := "escape!"
-		err = ch.PublishWithContext(ctx,
-			"test", // exchange
-			"",     // routing key
-			false,  // mandatory
-			false,  // immediate
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(body),
-			})
-		r.failOnPublishError(err, "Failed to publish a message")
 
-		log.Printf(" [x] Sent %s", body)
+	ticker := time.NewTicker(time.Second / messageRate)
+
+	for processedMsgs < timedMessages {
+		for i := 0; i < timedMessages-processedMsgs; i++ {
+			<-ticker.C
+			body := "escape!"
+			err = ch.PublishWithContext(ctx,
+				q.Name, // exchange
+				"",     // routing key
+				false,  // mandatory
+				false,  // immediate
+				amqp.Publishing{
+					ContentType: "text/plain",
+					Body:        []byte(body),
+				})
+			r.failOnPublishError(err, "Failed to publish a message")
+
+			log.Printf(" [x] Sent message: %s", body)
+			log.Printf(" processed messages: %d", processedMsgs)
+			processedMsgs++
+		}
 	}
 }

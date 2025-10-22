@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -37,8 +38,8 @@ func (r *RmqMsg) RmqConnect(rmqpurl string) {
 
 	q, err := ch.QueueDeclare(
 		"test", // name
-		false,  // durable
-		false,  // delete when unused
+		true,   // durable
+		true,   // delete when unused
 		false,  // exclusive
 		false,  // no-wait
 		nil,    // arguments
@@ -56,15 +57,12 @@ func (r *RmqMsg) RmqConnect(rmqpurl string) {
 	)
 
 	r.failOnError(err, "Failed to register a consumer")
-
-	var forever chan struct{}
-
-	go func() {
-		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
-		}
-	}()
+	// forever := make(chan bool)
+	for d := range msgs {
+		log.Printf("Received a message: %s", d.Body)
+		time.Sleep(time.Duration(time.Second * 4))
+	}
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
+	// <-forever
 }

@@ -34,9 +34,10 @@ func main() {
 	realDialer := &app.RealRmqDialer{}
 	subsriber := app.NewRmqClient(realDialer)
 	publisher := app.NewRmqPublisher(realDialer)
-	go subsriber.RmqConnect("amqp://guest:guest@localhost:5672/")
-	go publisher.RmqPublish("amqp://guest:guest@localhost:5672/")
 	defer subsriber.RmqConn.Close()
+
+	go publisher.RmqPublish("amqp://guest:guest@localhost:5672/")
+	go subsriber.RmqConnect("amqp://guest:guest@localhost:5672/")
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
