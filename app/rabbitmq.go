@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"log"
-	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -23,46 +22,18 @@ func (r *RmqMsg) failOnError(err error, msg string) {
 	}
 }
 
-func (r *RmqMsg) RmqConnect(rmqpurl string) {
+func (r *RmqMsg) RmqConnect(rmqpurl string) *amqp.Connection {
 	conn, err := r.dialer.Dial(rmqpurl)
 	r.failOnError(err, "Failed to connect to RabbitMQ")
-	//defer conn.Close()
 
 	if err != nil {
 		fmt.Errorf("Error: %v", err.Error())
 	}
 
-	ch, err := conn.Channel()
+	_, err = conn.Channel()
 	r.failOnError(err, "Failed to open a channel")
-	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"test", // name
-		true,   // durable
-		true,   // delete when unused
-		false,  // exclusive
-		false,  // no-wait
-		nil,    // arguments
-	)
-	r.failOnError(err, "Failed to declare a queue")
+	log.Println("Successfully connected to RabbitMQ.")
 
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
-	)
-
-	r.failOnError(err, "Failed to register a consumer")
-	// forever := make(chan bool)
-	for d := range msgs {
-		log.Printf("Received a message: %s", d.Body)
-		time.Sleep(time.Duration(time.Second * 4))
-	}
-
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	// <-forever
+	return conn
 }

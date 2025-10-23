@@ -9,12 +9,7 @@ import (
 )
 
 type RmqPubMsg struct {
-	dialer  AmqpDialer
-	RmqConn *amqp.Connection
-}
-
-func NewRmqPublisher(dialer AmqpDialer) *RmqPubMsg {
-	return &RmqPubMsg{dialer: dialer}
+	AmqpConn *amqp.Connection
 }
 
 func (r *RmqPubMsg) failOnPublishError(err error, msg string) {
@@ -23,19 +18,15 @@ func (r *RmqPubMsg) failOnPublishError(err error, msg string) {
 	}
 }
 
-func (r *RmqPubMsg) RmqPublish(rmqpurl string) {
+func (r *RmqPubMsg) RmqPublish() {
 	// simulate a 12 hour message stream
 	const timedMessages = 43200
 	var processedMsgs int
-	const messageRate = 5
+	const messageRate = 2
 
-	conn, err := r.dialer.Dial(rmqpurl)
-	r.failOnPublishError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
-
-	ch, err := conn.Channel()
+	ch, err := r.AmqpConn.Channel()
 	r.failOnPublishError(err, "Failed to open a channel")
-	defer ch.Close()
+	//defer ch.Close()
 
 	q, err := ch.QueueDeclare(
 		"test", // name
@@ -51,14 +42,15 @@ func (r *RmqPubMsg) RmqPublish(rmqpurl string) {
 	defer cancel()
 
 	ticker := time.NewTicker(time.Second / messageRate)
+	defer ticker.Stop()
 
 	for processedMsgs < timedMessages {
 		for i := 0; i < timedMessages-processedMsgs; i++ {
 			<-ticker.C
 			body := "escape!"
-			err = ch.PublishWithContext(ctx,
-				q.Name, // exchange
-				"",     // routing key
+			err := ch.PublishWithContext(ctx,
+				"",     // exchange
+				q.Name, // routing key
 				false,  // mandatory
 				false,  // immediate
 				amqp.Publishing{
