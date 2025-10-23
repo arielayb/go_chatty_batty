@@ -20,9 +20,9 @@ func (r *RmqPubMsg) failOnPublishError(err error, msg string) {
 
 func (r *RmqPubMsg) RmqPublish() {
 	// simulate a 12 hour message stream
-	const timedMessages = 43200
+	const timedMessages = 172800
 	var processedMsgs int
-	const messageRate = 2
+	const messageRate = 120
 
 	ch, err := r.AmqpConn.Channel()
 	r.failOnPublishError(err, "Failed to open a channel")

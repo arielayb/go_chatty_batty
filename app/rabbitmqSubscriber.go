@@ -35,7 +35,7 @@ func (r *RmqSub) RmqSubscriber() {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,  // auto-ack
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -43,13 +43,8 @@ func (r *RmqSub) RmqSubscriber() {
 	)
 
 	r.failOnError(err, "Failed to register a consumer")
-	//forever := make(chan struct{})
-	//go func() {
 	for d := range msgs {
 		log.Printf("Received a message: %s", d.Body)
-		time.Sleep(time.Millisecond * 200)
+		time.Sleep(5 * time.Duration(time.Minute))
 	}
-	//}()
-	//log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	//<-forever
 }
