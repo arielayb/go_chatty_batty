@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -25,10 +24,6 @@ func (r *RmqMsg) failOnError(err error, msg string) {
 func (r *RmqMsg) RmqConnect(rmqpurl string) *amqp.Connection {
 	conn, err := r.dialer.Dial(rmqpurl)
 	r.failOnError(err, "Failed to connect to RabbitMQ")
-
-	if err != nil {
-		fmt.Errorf("Error: %v", err.Error())
-	}
 
 	_, err = conn.Channel()
 	r.failOnError(err, "Failed to open a channel")

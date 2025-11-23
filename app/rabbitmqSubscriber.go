@@ -2,7 +2,7 @@ package app
 
 import (
 	"log"
-	"time"
+	//"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -20,7 +20,7 @@ func (r *RmqSub) failOnError(err error, msg string) {
 func (r *RmqSub) RmqSubscriber() {
 	ch, err := r.AmqpConn.Channel()
 	r.failOnError(err, "Failed to open a channel")
-	//defer ch.Close()
+	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
 		"test", // name
@@ -45,6 +45,6 @@ func (r *RmqSub) RmqSubscriber() {
 	r.failOnError(err, "Failed to register a consumer")
 	for d := range msgs {
 		log.Printf("Received a message: %s", d.Body)
-		time.Sleep(5 * time.Duration(time.Minute))
+		//time.Sleep(5 * time.Duration(time.Second))
 	}
 }

@@ -22,7 +22,7 @@ func (r *RmqPubMsg) RmqPublish() {
 	// simulate a 12 hour message stream
 	const timedMessages = 172800
 	var processedMsgs int
-	const messageRate = 120
+	const messageRate = 5
 
 	ch, err := r.AmqpConn.Channel()
 	r.failOnPublishError(err, "Failed to open a channel")
@@ -41,13 +41,14 @@ func (r *RmqPubMsg) RmqPublish() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	ticker := time.NewTicker(time.Second / messageRate)
+	ticker := time.NewTicker(time.Second / time.Duration(messageRate))
 	defer ticker.Stop()
 
 	for processedMsgs < timedMessages {
 		for i := 0; i < timedMessages-processedMsgs; i++ {
 			<-ticker.C
 			body := "escape!"
+			log.Printf("processing Message.....")
 			err := ch.PublishWithContext(ctx,
 				"",     // exchange
 				q.Name, // routing key
